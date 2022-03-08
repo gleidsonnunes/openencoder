@@ -1,0 +1,13 @@
+.DS_Store
+*.mp4
+*.exe
+*.exe~
+*.db
+.env
+bin/
+media/
+progress-log.txt
+vendor/
+.vscode/
+examples/
+web/node_modules/

@@ -6,17 +6,19 @@ RUN mkdir /user && \
 
 WORKDIR /src
 
-RUN apk add --update --no-cache ca-certificates git nodejs nodejs-npm
+RUN apk add --update --no-cache ca-certificates git nodejs nodejs-npm gcc
 
-COPY go.mod go.sum ./
+RUN git clone https://github.com/alfg/openencoder.git
 
-RUN go mod download
+RUN cd openencoder && go mod download
 
-COPY . .
+RUN cd openencoder && cd web && npm install && npm run build
 
-RUN cd web && npm install && npm run build
+RUN CGO_ENABLED=0 GOOS=linux cd openencoder && go clean -modcache
 
-RUN CGO_ENABLED=0 GOOS=linux go build -installsuffix 'static' -v -o /app .
+RUN CGO_ENABLED=0 GOOS=linux cd openencoder && go build -installsuffix 'static' -v -o /app .
+
+RUN chmod +x /app
 
 FROM linuxserver/ffmpeg:latest
 
@@ -28,11 +30,11 @@ COPY --from=builder /user/group /user/passwd /etc/
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-COPY --from=builder /src/web/dist /web/dist
+COPY --from=builder /src/web/dist /web/
 
-COPY --from=builder /app /app
+COPY --from=builder /app /
 
-COPY --from=builder /src/config/default.yml /config/default.yml
+COPY --from=builder /src/config/default.yml /config/
 
 EXPOSE 8080
 
