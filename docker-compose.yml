@@ -1,0 +1,55 @@
+version: '3'
+services:
+  server:
+    build: .
+    environment:
+      - GIN_MODE=release
+      - DATABASE_HOST=db
+      - REDIS_HOST=redis
+    links:
+      - redis
+      - db
+    ports:
+      - "8080:8080"
+    entrypoint: ["/app", "server"]
+
+  worker:
+    build: .
+    environment:
+      - DATABASE_HOST=db
+      - REDIS_HOST=redis
+    links:
+      - redis
+      - db
+    entrypoint: ["/app", "worker"]
+
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+
+  db:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: 'postgres'
+      POSTGRES_DB: 'openencoder'
+    volumes:
+      - /var/lib/postgresql/data
+      - ./scripts:/docker-entrypoint-initdb.d
+
+#   ftpd:
+#     image: stilliard/pure-ftpd
+#     container_name: pure-ftpd
+#     ports:
+#       - "21:21"
+#       - "30000-30009:30000-30009"
+#     volumes:
+#       - "./data/data:/home/username/"
+#       - "./data/passwd:/etc/pure-ftpd/passwd"
+#     environment:
+#       PUBLICHOST: "localhost"
+#       FTP_USER_NAME: username
+#       FTP_USER_PASS: mypass
+#       FTP_USER_HOME: /home/username
