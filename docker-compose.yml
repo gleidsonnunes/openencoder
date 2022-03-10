@@ -1,55 +1,42 @@
-version: '3'
+version: '3.7'
 services:
   server:
-    build: .
+    image: gleidsonnunes/openencoder:latest
+    container_name: server
     environment:
       - GIN_MODE=release
-      - DATABASE_HOST=db
-      - REDIS_HOST=redis
-    links:
-      - redis
-      - db
+      - DATABASE_HOST=priv.net.ip.addr
+      - REDIS_HOST=priv.net.ip.addr
     ports:
       - "8080:8080"
     entrypoint: ["/app", "server"]
+    restart: always
 
   worker:
-    build: .
+    image: gleidsonnunes/openencoder:latest
+    container_name: worker
     environment:
-      - DATABASE_HOST=db
-      - REDIS_HOST=redis
-    links:
-      - redis
-      - db
+      - DATABASE_HOST=priv.net.ip.addr
+      - REDIS_HOST=priv.net.ip.addr
     entrypoint: ["/app", "worker"]
+    restart: always
 
   redis:
     image: "redis:alpine"
+    container_name: redis
     ports:
       - "6379:6379"
+    restart: always
 
   db:
     image: postgres
+    container_name: db
     ports:
       - 5432:5432
     environment:
-      POSTGRES_PASSWORD: 'postgres'
-      POSTGRES_DB: 'openencoder'
+      - POSTGRES_PASSWORD: 'postgres'
+      - POSTGRES_DB: 'openencoder'
     volumes:
       - /var/lib/postgresql/data
       - ./scripts:/docker-entrypoint-initdb.d
-
-#   ftpd:
-#     image: stilliard/pure-ftpd
-#     container_name: pure-ftpd
-#     ports:
-#       - "21:21"
-#       - "30000-30009:30000-30009"
-#     volumes:
-#       - "./data/data:/home/username/"
-#       - "./data/passwd:/etc/pure-ftpd/passwd"
-#     environment:
-#       PUBLICHOST: "localhost"
-#       FTP_USER_NAME: username
-#       FTP_USER_PASS: mypass
-#       FTP_USER_HOME: /home/username
+    restart: always
